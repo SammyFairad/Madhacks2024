@@ -9,6 +9,13 @@ tasks = []
 def index():
     return render_template('index.html', tasks=tasks)
 
+@app.route('/task/<int:task_id>')
+def view_task(task_id):
+    if 0 <= task_id < len(tasks):
+        task = tasks[task_id]
+        return render_template('task.html', task=task, task_id=task_id)
+    return redirect(url_for('index'))
+
 @app.route('/add', methods=['POST'])
 def add_task():
     task_text = request.form.get('task').strip()  # Trim spaces here

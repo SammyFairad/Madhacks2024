@@ -29,6 +29,15 @@
                 margin: 0;
                 padding: 0;
             }
+
+        /* Container styling for consistency */
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
 
         /* Strikethrough style for completed tasks */
@@ -39,13 +48,34 @@
             text-decoration-color: grey;
             transition: color 0.3s ease, text-decoration-color 0.3s ease;
         }
+
+        /* Button styling for Add, Delete, and Details buttons */
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .details-button {
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>My To-Do List</h1>
 
-        <!-- Form to add new task -->
+        <!-- Form to add a new task -->
         <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
             <input type="text" id="taskInput" name="task" placeholder="Add a new task" required>
             <button type="submit">Add</button>
@@ -58,9 +88,14 @@
                     <input type="checkbox" onclick="toggleCompletion(this, {{ loop.index0 }})" {% if task.completed %}checked{% endif %}>
 
                     <!-- Editable task text -->
-                    <span class="task-text {% if task.completed %}completed{% endif %}" onclick="makeEditable(this)" data-task-id="{{ loop.index0 }}">
+                    <span class="task-text {% if task.completed %}completed{% endif %}" onclick="makeEditable(this, {{ loop.index0 }})" data-task-id="{{ loop.index0 }}">
                         {{ task.text }}
                     </span>
+
+                    <!-- Details button linking to task details page -->
+                    <a href="{{ url_for('view_task', task_id=loop.index0) }}">
+                        <button class="details-button">Details</button>
+                    </a>
 
                     <!-- Delete button with fade-out effect -->
                     <button onclick="deleteTask(event, {{ loop.index0 }})">Delete</button>
@@ -96,23 +131,20 @@
         }
 
         function saveTask(input) {
-            const newTaskText = input.value.trim(); // Trim spaces on save
+            const newText = input.value.trim();
             const taskId = input.getAttribute('data-task-id');
-
-            if (!newTaskText) {
-                deleteTask(null, taskId);
-            } else {
+            if (newText) {
                 const form = document.createElement('form');
                 form.action = `/edit/${taskId}`;
                 form.method = 'POST';
                 form.style.display = 'none';
 
-                const inputField = document.createElement('input');
-                inputField.type = 'hidden';
-                inputField.name = 'edited_text';
-                inputField.value = newTaskText;
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'edited_text';
+                hiddenInput.value = newText;
 
-                form.appendChild(inputField);
+                form.appendChild(hiddenInput);
                 document.body.appendChild(form);
                 form.submit();
             }

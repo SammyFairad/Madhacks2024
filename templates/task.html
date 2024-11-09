@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Task Details</h1>
+
+        <!-- Task text with completion styling -->
+        <p class="task-text {{ 'completed' if task.completed else '' }}">{{ task.text }}</p>
+        
+        <!-- Button to mark as complete/incomplete -->
+        <form action="{{ url_for('toggle_task', task_id=task_id) }}" method="POST" style="display:inline;">
+            <button type="submit">{{ 'Unmark' if task.completed else 'Complete' }}</button>
+        </form>
+
+        <!-- Link back to the main task list -->
+        <a href="{{ url_for('index') }}" class="back-link">Back to Task List</a>
+    </div>
+</body>
+</html>
