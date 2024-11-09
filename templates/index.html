@@ -4,23 +4,41 @@
     <meta charset="UTF-8">
     <title>To-Do List</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Style for removing outline and maintaining text size */
+        .task-input {
+            outline: none;
+            font-size: inherit; /* Maintain the same font size */
+            border: none;       /* Remove black border */
+            background-color: transparent; /* Match background for seamless edit */
+            width: 100%; /* Make the input fill the span's space */
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>My To-Do List</h1>
-        <form action="{{ url_for('add_task') }}" method="POST">
-            <input type="text" name="task" placeholder="Add a new task" required>
+
+        <!-- Form to add new task -->
+        <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
+            <input type="text" id="taskInput" name="task" placeholder="Add a new task" required>
             <button type="submit">Add</button>
         </form>
+
         <ul>
             {% for task in tasks %}
                 <li>
+                    <!-- Checkbox form to toggle completion -->
                     <form action="{{ url_for('toggle_task', task_id=loop.index0) }}" method="POST" style="display: inline;">
                         <input type="checkbox" onchange="this.form.submit()" {% if task.completed %}checked{% endif %}>
                     </form>
-                    <span style="{% if task.completed %}text-decoration: line-through; color: grey;{% endif %}">
+
+                    <!-- Editable task text -->
+                    <span class="task-text" onclick="makeEditable(this)" data-task-id="{{ loop.index0 }}" {% if task.completed %}style="text-decoration: line-through; color: grey;"{% endif %}>
                         {{ task.text }}
                     </span>
+
+                    <!-- Delete button -->
                     <form action="{{ url_for('delete_task', task_id=loop.index0) }}" method="POST" style="display:inline;">
                         <button type="submit">Delete</button>
                     </form>
@@ -28,5 +46,52 @@
             {% endfor %}
         </ul>
     </div>
+
+    <script>
+        function makeEditable(element) {
+            // Get the task text and create an input field with the current text
+            const taskText = element.textContent.trim();
+            const taskId = element.getAttribute('data-task-id');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = taskText;
+            input.classList.add('task-input');
+            input.setAttribute('data-task-id', taskId);
+
+            // Replace the span with the input field
+            element.replaceWith(input);
+            input.focus();
+
+            // Save the updated text on Enter or when focus is lost
+            input.addEventListener('blur', function() {
+                saveTask(input);
+            });
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    saveTask(input);
+                }
+            });
+        }
+
+        function saveTask(input) {
+            const newTaskText = input.value.trim(); // Trim spaces on save
+            const taskId = input.getAttribute('data-task-id');
+
+            // Create a form to submit the updated task text to the server
+            const form = document.createElement('form');
+            form.action = `/edit/${taskId}`;
+            form.method = 'POST';
+            form.style.display = 'none';
+
+            const inputField = document.createElement('input');
+            inputField.type = 'hidden';
+            inputField.name = 'edited_text';
+            inputField.value = newTaskText;
+
+            form.appendChild(inputField);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 </body>
 </html>
