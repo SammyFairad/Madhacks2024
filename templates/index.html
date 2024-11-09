@@ -130,9 +130,11 @@
         }
 
         function saveTask(input) {
-            const newText = input.value.trim();
+            const newTaskText = input.value.trim();
             const taskId = input.getAttribute('data-task-id');
-            if (newText) {
+            if (!newTaskText) {
+                deleteTask(null, taskId);
+            } else {
                 const form = document.createElement('form');
                 form.action = `/edit/${taskId}`;
                 form.method = 'POST';
@@ -141,7 +143,7 @@
                 const hiddenInput = document.createElement('input');
                 hiddenInput.type = 'hidden';
                 hiddenInput.name = 'edited_text';
-                hiddenInput.value = newText;
+                hiddenInput.value = newTaskText;
 
                 form.appendChild(hiddenInput);
                 document.body.appendChild(form);
