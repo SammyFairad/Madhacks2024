@@ -5,131 +5,250 @@
     <title>To-Do List</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* Existing styles... */
-
-        /* Settings button styling */
-        .settings-button {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #fff;
-            border: 2px solid #ccc;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.3s;
+        /* Style for removing outline and maintaining text size */
+        .task-input {
+            outline: none;
+            font-size: inherit;
+            border: none;
+            background-color: transparent;
+            width: 100%;
         }
 
-        .settings-button:hover {
-            transform: scale(1.1);
-            background-color: #f0f0f0;
+        /* Fade-out animation for deleting tasks */
+        .fade-out {
+            animation: fadeOut 0.5s forwards;
         }
 
-        .settings-menu {
-            display: none;
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            background-color: white;
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                height: 0;
+                margin: 0;
+                padding: 0;
+            }
+        }
+
+        /* Container styling for consistency */
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
             border: 1px solid #ccc;
             border-radius: 8px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            z-index: 1000;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .settings-menu button {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
+        /* Strikethrough style for completed tasks */
+        .completed {
+            color: grey;
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+            text-decoration-color: grey;
+            transition: color 0.3s ease, text-decoration-color 0.3s ease;
+        }
+
+        /* Button styling for Add, Delete, and Details buttons */
+        button {
             border: none;
-            background-color: #f9f9f9;
+            padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 0.9em;
             transition: background-color 0.3s;
         }
 
-        .settings-menu button:hover {
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .details-button {
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Progress bar styling */
+        .progress-container {
             background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 3px;
+            width: 100%;
         }
 
-        /* Theme styles */
-        body.default {
-            background-color: #fff;
-            color: #000;
-            font-family: Arial, sans-serif;
+        .progress-bar {
+            background-color: #8E24AA;
+            height: 20px;
+            border-radius: 10px;
+            width: 0;
+            transition: width 0.3s ease;
         }
 
-        body.pink-lofi {
-            background-color: #FFC0CB;
-            color: #5A5A5A;
-            font-family: "Comic Sans MS", cursive, sans-serif;
+        /* Gold and shine effect when full */
+        .progress-bar.full {
+            background: linear-gradient(45deg, gold, #FFD700);
+            animation: shine 2s infinite linear;
         }
 
-        body.brown-library {
-            background-color: #D2B48C;
-            color: #2F2F2F;
-            font-family: "Georgia", serif;
-        }
-
-        body.green-cottagecore {
-            background-color: #98FB98;
-            color: #2A3D1D;
-            font-family: "Courier New", monospace;
-        }
-
-        body.purple-cosmos {
-            background-color: #D8BFD8;
-            color: #3C1361;
-            font-family: "Trebuchet MS", sans-serif;
+        @keyframes shine {
+            0% { box-shadow: 0 0 10px gold; }
+            50% { box-shadow: 0 0 20px gold; }
+            100% { box-shadow: 0 0 10px gold; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>My To-Do List</h1>
-        <!-- Rest of your existing HTML content -->
-    </div>
 
-    <!-- Settings Button -->
-    <div class="settings-button" onclick="toggleSettingsMenu()">⚙️</div>
-    <div class="settings-menu" id="settingsMenu">
-        <button onclick="changeTheme('default')">Default</button>
-        <button onclick="changeTheme('pink-lofi')">Pink Lo-Fi</button>
-        <button onclick="changeTheme('brown-library')">Brown Library</button>
-        <button onclick="changeTheme('green-cottagecore')">Green Cottagecore</button>
-        <button onclick="changeTheme('purple-cosmos')">Purple Cosmos</button>
+        <!-- Progress bar container -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Form to add a new task -->
+        <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
+            <input type="text" id="taskInput" name="task" placeholder="Add a new task" required>
+            <button type="submit">Add</button>
+        </form>
+
+        <ul>
+            {% for task in tasks %}
+                <li id="task-{{ loop.index0 }}">
+                    <!-- Checkbox to toggle completion with strikethrough effect -->
+                    <input type="checkbox" onclick="toggleCompletion(this, {{ loop.index0 }})" {% if task.completed %}checked{% endif %}>
+
+                    <!-- Editable task text -->
+                    <span class="task-text {% if task.completed %}completed{% endif %}" onclick="makeEditable(this, {{ loop.index0 }})" data-task-id="{{ loop.index0 }}">
+                        {{ task.text }}
+                    </span>
+
+                    <!-- Details button linking to task details page -->
+                    <a href="{{ url_for('view_task', task_id=loop.index0) }}">
+                        <button class="details-button">Details</button>
+                    </a>
+
+                    <!-- Delete button with fade-out effect -->
+                    <button onclick="deleteTask(event, {{ loop.index0 }})">Delete</button>
+                </li>
+            {% endfor %}
+        </ul>
     </div>
 
     <script>
-        function toggleSettingsMenu() {
-            const menu = document.getElementById('settingsMenu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        function makeEditable(element) {
+            const taskText = element.textContent.trim();
+            const taskId = element.getAttribute('data-task-id');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = taskText;
+            input.classList.add('task-input');
+            input.setAttribute('data-task-id', taskId);
+
+            element.replaceWith(input);
+            input.focus();
+
+            input.addEventListener('blur', function() {
+                saveTask(input);
+            });
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    saveTask(input);
+                }
+            });
         }
 
-        function changeTheme(theme) {
-            // Remove existing theme classes
-            document.body.classList.remove('default', 'pink-lofi', 'brown-library', 'green-cottagecore', 'purple-cosmos');
+        function saveTask(input) {
+            const newTaskText = input.value.trim();
+            const taskId = input.getAttribute('data-task-id');
+            if (!newTaskText) {
+                deleteTask(null, taskId);
+            } else {
+                const form = document.createElement('form');
+                form.action = `/edit/${taskId}`;
+                form.method = 'POST';
+                form.style.display = 'none';
 
-            // Add the selected theme class
-            document.body.classList.add(theme);
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'edited_text';
+                hiddenInput.value = newTaskText;
 
-            // Save the theme to localStorage
-            localStorage.setItem('selectedTheme', theme);
-
-            // Hide the settings menu
-            toggleSettingsMenu();
+                form.appendChild(hiddenInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
 
-        // Apply the persisted theme on page load
-        window.onload = function () {
-            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
-            document.body.classList.add(savedTheme);
+        function deleteTask(event, taskId) {
+            if (event) event.preventDefault();
+            const taskElement = document.getElementById(`task-${taskId}`);
+            taskElement.classList.add('fade-out');
+
+            setTimeout(() => {
+                const form = document.createElement('form');
+                form.action = `/delete/${taskId}`;
+                form.method = 'POST';
+                form.style.display = 'none';
+                document.body.appendChild(form);
+                form.submit();
+            }, 500);
+        }
+
+        function toggleCompletion(checkbox, taskId) {
+            const taskText = checkbox.nextElementSibling;
+            taskText.classList.toggle('completed', checkbox.checked);
+
+            // Submit the completion state to the server
+            const form = document.createElement('form');
+            form.action = `/toggle/${taskId}`;
+            form.method = 'POST';
+            form.style.display = 'none';
+            document.body.appendChild(form);
+            form.submit();  
+            // Reorder tasks based on completion
+            reorderTasks();
+
+            updateProgressBar(); // Update progress bar
+        } 
+
+        function reorderTasks() {
+            const taskList = document.querySelector('ul');
+            const tasks = Array.from(taskList.querySelectorAll('li')); 
+            
+            tasks.sort((a, b) => {
+                const aCompleted = a.querySelector('.task-text').classList.contains('completed');
+                const bCompleted = b.querySelector('.task-text').classList.contains('completed');
+                return aCompleted - bCompleted;
+            });
+
+            // Re-append tasks to the list in sorted order
+            tasks.forEach(task => taskList.appendChild(task));
+        }
+
+        function updateProgressBar() {
+            const total_task = 10;
+            const completedTasks = document.querySelectorAll('.task-text.completed').length;
+            const progressBar = document.getElementById('progressBar');
+
+            // Calculate progress percentage, capping it at 100%
+            const progress = Math.min((completedTasks / total_task) * 100, 100);
+            progressBar.style.width = `${progress}%`;
+
+            // Add the "shining" effect only when fully complete
+            if (completedTasks >= total_task) {
+                progressBar.classList.add('full');
+            } else {
+                progressBar.classList.remove('full');
+            }
+        }
+
+        // Initial progress bar setup on page load
+        window.onload = function() { 
+            reorderTasks();
+            updateProgressBar(); 
         };
     </script>
 </body>
