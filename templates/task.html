@@ -14,7 +14,6 @@
             border: 1px solid #ccc;
             resize: vertical;
         }
-
         .task-text {
             font-size: 1.1em;
             padding: 10px;
@@ -26,29 +25,39 @@
     <div class="container">
         <h1>{{ task_name }} Details</h1>
 
+        <!-- Text area for editing task description -->
         <textarea id="task-input" class="large-input" placeholder="Add more details">{{ task_description }}</textarea><br><br>
+        
+        <!-- Plain text display of task description -->
         <div id="task-text" class="task-text">{{ task_description }}</div>
 
+        <!-- Save button to toggle input into text -->
         <button type="button" onclick="saveTask({{ task_id }})"><a href="{{ url_for('index') }}" class="back-link">Back</a></button>
+
+        <!-- Link back to the main task list -->
+        
     </div>
 
     <script>
         function saveTask(taskId) {
             const taskInput = document.getElementById("task-input");
+            const taskText = document.getElementById("task-text");
+
+            // Get the input value for the description
             const newText = taskInput.value.trim();
 
+            // Send the updated description to the server via AJAX
             fetch(`/save_task/${taskId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify({ text: newText })
-            }).catch(error => console.error('Error:', error));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
-
-        // Apply the persisted theme
-        window.onload = function () {
-            const savedTheme = localStorage.getItem('selectedTheme') || 'default';
-            document.body.classList.add(savedTheme);
-        };
     </script>
 </body>
 </html>
