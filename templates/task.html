@@ -32,10 +32,10 @@
         <div id="task-text" class="task-text">{{ task_description }}</div>
 
         <!-- Save button to toggle input into text -->
-        <button type="button" onclick="saveTask({{ task_id }})">Save</button>
+        <button type="button" onclick="saveTask({{ task_id }})"><a href="{{ url_for('index') }}" class="back-link">Back</a></button>
 
         <!-- Link back to the main task list -->
-        <a href="{{ url_for('index') }}" class="back-link">Back to Task List</a>
+        
     </div>
 
     <script>
