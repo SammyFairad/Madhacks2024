@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import requests
+import os
 
 app = Flask(__name__)
 
@@ -9,7 +10,7 @@ task_descriptions = {}
 
 # Hugging Face API settings
 HUGGING_FACE_API_URL = "https://api-inference.huggingface.co/models/EleutherAI/gpt-j-6B"
-HUGGING_FACE_API_TOKEN = "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"
+HUGGING_FACE_API_TOKEN = os.environ['HUGGING_FACE_API_TOKEN']
 
 def get_ai_tips(task_name):
     """Fetch tips and tricks from Hugging Face's GPT-J model for a given task name."""
