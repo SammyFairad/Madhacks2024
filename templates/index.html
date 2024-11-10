@@ -68,11 +68,45 @@
             margin-left: 10px;
             font-size: 0.9em;
         }
+
+        /* Progress bar styling */
+        .progress-container {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 3px;
+            width: 100%;
+        }
+
+        .progress-bar {
+            background-color: #8E24AA;
+            height: 20px;
+            border-radius: 10px;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        /* Gold and shine effect when full */
+        .progress-bar.full {
+            background: linear-gradient(45deg, gold, #FFD700);
+            animation: shine 2s infinite linear;
+        }
+
+        @keyframes shine {
+            0% { box-shadow: 0 0 10px gold; }
+            50% { box-shadow: 0 0 20px gold; }
+            100% { box-shadow: 0 0 10px gold; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>My To-Do List</h1>
+
+        <!-- Progress bar container -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
 
         <!-- Form to add a new task -->
         <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
@@ -105,7 +139,6 @@
 
     <script>
         function makeEditable(element) {
-            // Trim any extra spaces and display the task in an input field for editing
             const taskText = element.textContent.trim();
             const taskId = element.getAttribute('data-task-id');
             const input = document.createElement('input');
@@ -114,11 +147,9 @@
             input.classList.add('task-input');
             input.setAttribute('data-task-id', taskId);
 
-            // Replace the span with the input field
             element.replaceWith(input);
             input.focus();
 
-            // Save the updated text on Enter or when focus is lost
             input.addEventListener('blur', function() {
                 saveTask(input);
             });
@@ -177,7 +208,29 @@
             form.style.display = 'none';
             document.body.appendChild(form);
             form.submit();
+
+            updateProgressBar(); // Update progress bar
         }
+
+        function updateProgressBar() {
+            const total_task = 10;
+            const completedTasks = document.querySelectorAll('.task-text.completed').length;
+            const progressBar = document.getElementById('progressBar');
+
+            // Calculate progress percentage, capping it at 100%
+            const progress = Math.min((completedTasks / total_task) * 100, 100);
+            progressBar.style.width = `${progress}%`;
+
+            // Add the "shining" effect only when fully complete
+            if (completedTasks >= total_task) {
+                progressBar.classList.add('full');
+            } else {
+                progressBar.classList.remove('full');
+            }
+        }
+
+        // Initial progress bar setup on page load
+        window.onload = updateProgressBar;
     </script>
 </body>
 </html>
