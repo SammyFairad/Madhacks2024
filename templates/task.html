@@ -14,27 +14,42 @@
             border: 1px solid #ccc;
             resize: vertical;
         }
-        .task-text {
-            font-size: 1.1em;
-            padding: 10px;
-            display: none; /* Hide initially */
+        /* Styling for the left section (task details) */
+        .task-details {
+            width: 60%; /* Adjust width as needed */
+            padding: 30px;
+        }
+
+        /* Styling for the right section (AI tips) */
+        .ai-tips {
+            width: 40%; /* Adjust width as needed */
+            margin-left: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>{{ task_name }} Details</h1>
+    <div class="big-container">
+        <div class="sub-container">
+            <div class="task-details">
+                <h1>{{ task_name }} Details</h1>
+    
+                <!-- Text area for editing task description -->
+                <textarea id="task-input" class="large-input" placeholder="Add task details here">{{ task_description }}</textarea><br><br>
+            </div>
+    
+            <!-- Right section for AI Tips and Tricks -->
+            <div class="ai-tips">
+                <h2>AI Tips and Tricks</h2>
+                <p>{{ ai_tips }}</p>
+            </div>
+        </div>
 
-        <!-- Text area for editing task description -->
-        <textarea id="task-input" class="large-input" placeholder="Add more details">{{ task_description }}</textarea><br><br>
-        
-        <!-- Plain text display of task description -->
-        <div id="task-text" class="task-text">{{ task_description }}</div>
-
-        <!-- Save button to toggle input into text -->
+        <!-- Save and back button to toggle input into text and return to main page -->
         <button type="button" onclick="saveTask({{ task_id }})"><a href="{{ url_for('index') }}" class="back-link">Back</a></button>
-
-        <!-- Link back to the main task list -->
         
     </div>
 
