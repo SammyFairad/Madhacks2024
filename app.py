@@ -9,16 +9,9 @@ tasks = []
 def index():
     return render_template('index.html', tasks=tasks)
 
-@app.route('/task/<int:task_id>')
-def view_task(task_id):
-    if 0 <= task_id < len(tasks):
-        task = tasks[task_id]
-        return render_template('task.html', task=task, task_id=task_id)
-    return redirect(url_for('index'))
-
 @app.route('/add', methods=['POST'])
 def add_task():
-    task_text = request.form.get('task').strip()  # Trim spaces here
+    task_text = request.form.get('task').strip()
     if task_text:
         tasks.append({"text": task_text, "completed": False})
     return redirect(url_for('index'))
@@ -35,20 +28,19 @@ def delete_task(task_id):
         tasks.pop(task_id)
     return redirect(url_for('index'))
 
-@app.route('/toggle_edit/<int:task_id>', methods=['POST'])
-def toggle_edit(task_id):
+@app.route('/task/<int:task_id>')
+def view_task(task_id):
     if 0 <= task_id < len(tasks):
-        # Toggle the editing state
-        tasks[task_id]['editing'] = not tasks[task_id].get('editing', False)
+        return render_template('task.html', task=tasks[task_id], task_id=task_id)
     return redirect(url_for('index'))
 
-@app.route('/edit/<int:task_id>', methods=['POST'])
-def edit_task(task_id):
+@app.route('/update/<int:task_id>', methods=['POST'])
+def update_task(task_id):
     if 0 <= task_id < len(tasks):
-        new_text = request.form.get('edited_text')
-        tasks[task_id]['text'] = new_text
+        new_text = request.form.get('task-input').strip()
+        if new_text:
+            tasks[task_id]['text'] = new_text
     return redirect(url_for('index'))
-
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090, debug=True)

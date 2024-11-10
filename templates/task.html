@@ -4,17 +4,27 @@
     <meta charset="UTF-8">
     <title>Task Details</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Styling for textarea to make it larger and more comfortable for editing */
+        .large-input {
+            width: 100%;
+            height: 100px;
+            font-size: 1.1em;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            resize: vertical;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Task Details</h1>
+        <h1>{{ task.text }} Details</h1>
 
-        <!-- Task text with completion styling -->
-        <p class="task-text {{ 'completed' if task.completed else '' }}">{{ task.text }}</p>
-        
-        <!-- Button to mark as complete/incomplete -->
-        <form action="{{ url_for('toggle_task', task_id=task_id) }}" method="POST" style="display:inline;">
-            <button type="submit">{{ 'Unmark' if task.completed else 'Complete' }}</button>
+        <!-- Form to edit and save task text in the textarea -->
+        <form action="{{ url_for('update_task', task_id=task_id) }}" method="POST">
+            <textarea id="task-input" name="task-input" class="large-input"></textarea><br><br>
+            <button type="submit">Save</button>
         </form>
 
         <!-- Link back to the main task list -->
