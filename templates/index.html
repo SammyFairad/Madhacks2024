@@ -2,72 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>To-Do List</title>
+    <title>To-Do List with Progress Bar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        /* Style for removing outline and maintaining text size */
-        .task-input {
-            outline: none;
-            font-size: inherit;
-            border: none;
-            background-color: transparent;
+        /* Additional CSS for the progress bar */
+        .progress-container {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 3px;
             width: 100%;
         }
 
-        /* Fade-out animation for deleting tasks */
-        .fade-out {
-            animation: fadeOut 0.5s forwards;
+        .task-input {
+            outline: none;
+            font-size: inherit; /* Maintain the same font size */
+            border: none;       /* Remove black border */
+            background-color: transparent; /* Match background for seamless edit */
+            width: 100%; /* Make the input fill the span's space */
         }
 
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-                height: 0;
-                margin: 0;
-                padding: 0;
-            }
-
-        /* Container styling for consistency */
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        .progress-bar {
+            background-color: #8E24AA;
+            height: 20px;
+            border-radius: 10px;
+            width: 0;
+            transition: width 0.3s ease;
         }
 
-        /* Strikethrough style for completed tasks */
-        .completed {
-            color: grey;
-            text-decoration: line-through;
-            text-decoration-thickness: 2px;
-            text-decoration-color: grey;
-            transition: color 0.3s ease, text-decoration-color 0.3s ease;
+        /* Gold and shine effect when full */
+        .progress-bar.full {
+            background: linear-gradient(45deg, gold, #FFD700);
+            animation: shine 2s infinite linear;
         }
 
-        /* Button styling for Add, Delete, and Details buttons */
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .details-button {
-            margin-left: 10px;
-            font-size: 0.9em;
+        @keyframes shine {
+            0% { box-shadow: 0 0 10px gold; }
+            50% { box-shadow: 0 0 20px gold; }
+            100% { box-shadow: 0 0 10px gold; }
         }
     </style>
 </head>
@@ -75,27 +47,27 @@
     <div class="container">
         <h1>My To-Do List</h1>
 
-        <!-- Form to add a new task -->
+        <!-- Progress bar container -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <!-- Form to add new task -->
         <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
             <input type="text" id="taskInput" name="task" placeholder="Add a new task" required>
             <button type="submit">Add</button>
         </form>
 
-        <ul>
+        <ul id="taskList">
             {% for task in tasks %}
                 <li id="task-{{ loop.index0 }}">
-                    <!-- Checkbox to toggle completion with strikethrough effect -->
+                    <!-- Checkbox to toggle completion -->
                     <input type="checkbox" onclick="toggleCompletion(this, {{ loop.index0 }})" {% if task.completed %}checked{% endif %}>
 
                     <!-- Editable task text -->
-                    <span class="task-text {% if task.completed %}completed{% endif %}" onclick="makeEditable(this, {{ loop.index0 }})" data-task-id="{{ loop.index0 }}">
+                    <span class="task-text {% if task.completed %}completed{% endif %}" onclick="makeEditable(this)" data-task-id="{{ loop.index0 }}">
                         {{ task.text }}
                     </span>
-
-                    <!-- Details button linking to task details page -->
-                    <a href="{{ url_for('view_task', task_id=loop.index0) }}">
-                        <button class="details-button">Details</button>
-                    </a>
 
                     <!-- Delete button with fade-out effect -->
                     <button onclick="deleteTask(event, {{ loop.index0 }})">Delete</button>
@@ -106,7 +78,6 @@
 
     <script>
         function makeEditable(element) {
-            // Trim any extra spaces and display the task in an input field for editing
             const taskText = element.textContent.trim();
             const taskId = element.getAttribute('data-task-id');
             const input = document.createElement('input');
@@ -115,11 +86,9 @@
             input.classList.add('task-input');
             input.setAttribute('data-task-id', taskId);
 
-            // Replace the span with the input field
             element.replaceWith(input);
             input.focus();
 
-            // Save the updated text on Enter or when focus is lost
             input.addEventListener('blur', function() {
                 saveTask(input);
             });
@@ -133,6 +102,7 @@
         function saveTask(input) {
             const newTaskText = input.value.trim();
             const taskId = input.getAttribute('data-task-id');
+
             if (!newTaskText) {
                 deleteTask(null, taskId);
             } else {
@@ -141,12 +111,12 @@
                 form.method = 'POST';
                 form.style.display = 'none';
 
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'edited_text';
-                hiddenInput.value = newTaskText;
+                const inputField = document.createElement('input');
+                inputField.type = 'hidden';
+                inputField.name = 'edited_text';
+                inputField.value = newTaskText;
 
-                form.appendChild(hiddenInput);
+                form.appendChild(inputField);
                 document.body.appendChild(form);
                 form.submit();
             }
@@ -178,7 +148,27 @@
             form.style.display = 'none';
             document.body.appendChild(form);
             form.submit();
+
+            updateProgressBar(); // Update progress bar
         }
+
+        function updateProgressBar() {
+            const total_task = 8
+            const completedTasks = document.querySelectorAll('.task-text.completed').length;
+            const progressBar = document.getElementById('progressBar');
+            const progress = Math.min((completedTasks / total_task) * 100, 100);
+            progressBar.style.width = `${progress}%`;
+
+            // Add the "shining" effect when fully complete
+            if (completedTasks >= total_task) {
+                progressBar.classList.add('full');
+            } else {
+                progressBar.classList.remove('full');
+            }
+        }
+
+        // Initial progress bar setup on page load
+        window.onload = updateProgressBar;
     </script>
 </body>
 </html>
