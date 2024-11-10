@@ -207,9 +207,25 @@
             form.method = 'POST';
             form.style.display = 'none';
             document.body.appendChild(form);
-            form.submit();
+            form.submit();  
+            // Reorder tasks based on completion
+            reorderTasks();
 
             updateProgressBar(); // Update progress bar
+        } 
+
+        function reorderTasks() {
+            const taskList = document.querySelector('ul');
+            const tasks = Array.from(taskList.querySelectorAll('li')); 
+            
+            tasks.sort((a, b) => {
+                const aCompleted = a.querySelector('.task-text').classList.contains('completed');
+                const bCompleted = b.querySelector('.task-text').classList.contains('completed');
+                return aCompleted - bCompleted;
+            });
+
+            // Re-append tasks to the list in sorted order
+            tasks.forEach(task => taskList.appendChild(task));
         }
 
         function updateProgressBar() {
@@ -230,7 +246,10 @@
         }
 
         // Initial progress bar setup on page load
-        window.onload = updateProgressBar;
+        window.onload = function() { 
+            reorderTasks();
+            updateProgressBar(); 
+        };
     </script>
 </body>
 </html>

@@ -23,7 +23,7 @@
 
         <!-- Form to edit and save task text in the textarea -->
         <form action="{{ url_for('update_task', task_id=task_id) }}" method="POST">
-            <textarea id="task-input" name="task-input" class="large-input"></textarea><br><br>
+            <textarea id="task-input" name="task-input" class="large-input" placeholder="Insert more details"></textarea><br><br>
             <button type="submit">Save</button>
         </form>
 
