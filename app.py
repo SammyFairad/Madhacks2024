@@ -25,6 +25,20 @@ def toggle_task(task_id):
         tasks[task_id]['completed'] = not tasks[task_id]['completed']
     return redirect(url_for('index'))
 
+@app.route('/toggle_edit/<int:task_id>', methods=['POST'])
+def toggle_edit(task_id):
+    if 0 <= task_id < len(tasks):
+        # Toggle the editing state
+        tasks[task_id]['editing'] = not tasks[task_id].get('editing', False)
+    return redirect(url_for('index'))
+
+@app.route('/edit/<int:task_id>', methods=['POST'])
+def edit_task(task_id):
+    if 0 <= task_id < len(tasks):
+        new_text = request.form.get('edited_text')
+        tasks[task_id]['text'] = new_text
+    return redirect(url_for('index'))
+
 @app.route('/delete/<int:task_id>', methods=['POST'])
 def delete_task(task_id):
     if 0 <= task_id < len(tasks):
